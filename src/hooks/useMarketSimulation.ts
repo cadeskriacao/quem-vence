@@ -41,18 +41,22 @@ export function useMarketSimulation() {
             const newVenceSold = type === 'VENCE' ? c.supply_vence_sold + qty : c.supply_vence_sold;
             const newPerdeSold = type === 'PERDE' ? c.supply_perde_sold + qty : c.supply_perde_sold;
 
-            // Calculate new Prices based on NET Difference
-            // Rule: Each net token increases/decreases price by 0.01 FROM BASE
-            // P_vence = 10 + (V - P) * 0.01
-            // P_perde = 10 - (V - P) * 0.01
+            // Enforce Supply Limit (MOCK - in real DB this would be a check constraint)
+            if (type === 'VENCE' && newVenceSold > 10000) return c; // Reject trade
+            if (type === 'PERDE' && newPerdeSold > 10000) return c; // Reject trade
 
-            const net = newVenceSold - newPerdeSold;
-            const newPriceVence = BASE_PRICE + (net * PRICE_INCREMENT);
-            const newPricePerde = BASE_PRICE - (net * PRICE_INCREMENT); // Mirrored
+            // Net Delta for VENCE Price: Vence - Perde
+            const netVence = newVenceSold - newPerdeSold;
+            // Net Delta for PERDE Price: Perde - Vence (Inverse)
+            const netPerde = newPerdeSold - newVenceSold;
 
-            // Clamp prices (e.g. min 0.01, max 19.99)
-            const clampedVence = Math.max(0.01, Math.min(19.99, newPriceVence));
-            const clampedPerde = Math.max(0.01, Math.min(19.99, newPricePerde));
+            // Calculate new unit prices
+            const newPriceVence = BASE_PRICE + (netVence * PRICE_INCREMENT);
+            const newPricePerde = BASE_PRICE + (netPerde * PRICE_INCREMENT);
+
+            // Clamp prices (min 0.01)
+            const clampedVence = Math.max(0.01, newPriceVence);
+            const clampedPerde = Math.max(0.01, newPricePerde);
 
             return {
                 ...c,

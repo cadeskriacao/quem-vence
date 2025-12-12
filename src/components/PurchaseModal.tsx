@@ -38,22 +38,34 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
 
     // Calculation Logic
     const qtyNum = parseInt(quantity) || 0;
-    // Calculate price based on type.
-    // Note: calculatePurchase assumes standard bonding curve. 
-    // For this model where P_VENCE and P_PERDE are coupled:
-    // Buying VENCE = Price goes UP. Buying PERDE = Price goes UP (for that asset, because you consume supply from base).
-    // Actually, wait. "Buy VENCE" -> Costs current Price.
-    // Is the cost calculation using the INTEGRAL of the curve?
-    // "Cenário de Teste: Compra em Lote... Preço #1 10.00, #100 10.99. Média 10.495". 
-    // YES, it uses the integral (average price). 
-    // My `calculatePurchase` function handles this.
-    // But I need to pass the correct 'current sold amount' relative to the curve direction.
-    // If buying VENCE: Use supply_vence_sold.
-    // If buying PERDE: Use supply_perde_sold. 
-    // (Assuming symmetric curves starting from P0=10).
 
-    const currentSold = type === 'VENCE' ? candidate.supply_vence_sold : candidate.supply_perde_sold;
-    const { total, averagePrice } = calculatePurchase(currentSold, qtyNum);
+    // Business Rule: P_VENCE and P_PERDE are coupled by Net Supply.
+    // P_VENCE = Base + (Vence - Perde)*0.01
+    // P_PERDE = Base + (Perde - Vence)*0.01 (which is Base - (Vence-Perde)*0.01)
+
+    // Identify current Net Delta for the CHOSEN type.
+    // If buying VENCE: Net = VenceSold - PerdeSold
+    // If buying PERDE: Net = PerdeSold - VenceSold
+
+    let currentNetDelta = 0;
+    let currentSupply = 0; // For limit check
+
+    if (type === 'VENCE') {
+        currentNetDelta = candidate.supply_vence_sold - candidate.supply_perde_sold;
+        currentSupply = candidate.supply_vence_sold;
+    } else {
+        currentNetDelta = candidate.supply_perde_sold - candidate.supply_vence_sold;
+        currentSupply = candidate.supply_perde_sold;
+    }
+
+    // Check Supply Limit (10k)
+    // Actually MAX_SUPPLY is 10000.
+    // If currentSupply + qty > 10000, we should limit or warn.
+    // For now, let's just use the calc, enforce in UI if needed.
+
+    const { total, averagePrice } = calculatePurchase(currentNetDelta, qtyNum);
+
+    const isSoldOut = currentSupply + qtyNum > 10000;
 
     const handlePayment = () => {
         setLoading(true);
@@ -166,10 +178,17 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
                                 </span>
                             </label>
 
+                            {isSoldOut && (
+                                <div className="p-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2">
+                                    <AlertTriangle size={18} />
+                                    <span>Limite de oferta excedido (Máx 10.000). Reduza a quantidade.</span>
+                                </div>
+                            )}
+
                             <button
-                                disabled={!agreed || !cpf || !whatsapp}
+                                disabled={!agreed || !cpf || !whatsapp || isSoldOut}
                                 onClick={() => setStep('PAYMENT')}
-                                className={`w-full py-3 rounded-lg font-bold text-black transition-all ${(!agreed || !cpf || !whatsapp) ? 'opacity-50 cursor-not-allowed bg-gray-500' : (type === 'VENCE' ? 'bg-vence hover:bg-vence/90' : 'bg-perde hover:bg-perde/90')}`}
+                                className={`w-full py-3 rounded-lg font-bold text-black transition-all ${(!agreed || !cpf || !whatsapp || isSoldOut) ? 'opacity-50 cursor-not-allowed bg-gray-500' : (type === 'VENCE' ? 'bg-vence hover:bg-vence/90' : 'bg-perde hover:bg-perde/90')}`}
                             >
                                 Ir para Pagamento
                             </button>

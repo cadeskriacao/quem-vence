@@ -55,7 +55,7 @@ export function CandidateCard({ candidate, onBuy }: Props) {
                 >
                     <div className="w-full flex justify-between items-center px-2">
                         <div className="flex items-center gap-1 font-bold">
-                            <CheckCircle size={16} /> Yes
+                            <CheckCircle size={16} /> Ganha
                         </div>
                         <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full">
                             {multiVence}x
@@ -70,7 +70,7 @@ export function CandidateCard({ candidate, onBuy }: Props) {
                 >
                     <div className="w-full flex justify-between items-center px-2">
                         <div className="flex items-center gap-1 font-bold">
-                            <XCircle size={16} /> No
+                            <XCircle size={16} /> Perde
                         </div>
                         <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full">
                             {multiPerde}x

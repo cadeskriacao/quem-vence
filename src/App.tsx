@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { CandidateCard } from './components/CandidateCard'
 import { BondingCurveChart } from './components/BondingCurveChart'
 import { PurchaseModal } from './components/PurchaseModal'
-import { Info, Wallet } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { useMarketSimulation } from './hooks/useMarketSimulation'
 import { useUserPortfolio } from './hooks/useUserPortfolio'
 import { WalletModal } from './components/WalletModal'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { AuthModal } from './components/AuthModal'
 
-function App() {
+function AppContent() {
+  const { user } = useAuth();
   const { candidates, history, executeTrade } = useMarketSimulation();
   const { portfolio, balance, addToPortfolio, sellFromPortfolio, withdrawBalance } = useUserPortfolio();
 
@@ -16,7 +19,10 @@ function App() {
 
   // Chart selection state
   const [chartCandidateId, setChartCandidateId] = useState<string | null>(null);
+
+  // Modals
   const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Default to first candidate for chart if none selected
   const activeChartId = chartCandidateId || candidates[0]?.id;
@@ -25,6 +31,10 @@ function App() {
   const selectedCandidate = candidates.find(c => c.id === selectedCandidateId);
 
   const openPurchase = (type: 'VENCE' | 'PERDE', candidateId: string) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
     setSelectedCandidateId(candidateId);
     setPurchaseType(type);
   };
@@ -62,24 +72,14 @@ function App() {
             <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Presidente</span>
           </div>
           <div className="flex items-center gap-4">
-            {/* Wallet Button */}
-            <button
-              onClick={() => setIsWalletOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors"
-            >
-              <Wallet size={16} className="text-gray-900" />
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-[10px] uppercase font-bold text-gray-400">Saldo</span>
-                <span className="text-xs font-bold text-gray-900">R$ {balance.toFixed(2)}</span>
-              </div>
-            </button>
+            {/* Wallet Button REMOVED */}
 
             <div className="flex flex-col items-end">
-              <div className="text-xs text-gray-400 font-medium">Vol R$10.000</div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 mb-0.5">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 <img src="https://flagcdn.com/w20/br.png" alt="Brasil" className="w-5 h-auto rounded-sm" />
               </div>
+              <div className="text-xs text-gray-400 font-medium tracking-tight">Vol R$10.000</div>
             </div>
           </div>
         </div>
@@ -185,7 +185,20 @@ function App() {
           onSuccess={handlePurchaseSuccess}
         />
       )}
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+      />
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 
