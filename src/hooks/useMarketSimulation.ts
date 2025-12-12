@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Database } from '../types/database.types';
 import { MOCK_CANDIDATES } from '../data/mock';
-import { getCurrentPrice, BASE_PRICE, PRICE_INCREMENT } from '../lib/bondingCurve';
+import { BASE_PRICE, PRICE_INCREMENT } from '../lib/bondingCurve';
 
 export type Candidate = Database['public']['Tables']['candidates']['Row'];
 

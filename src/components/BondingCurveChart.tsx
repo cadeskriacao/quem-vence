@@ -1,13 +1,12 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import type { Database } from '../types/database.types';
+
 import type { PricePoint } from '../hooks/useMarketSimulation';
 
 interface Props {
-    candidate: Database['public']['Tables']['candidates']['Row'];
     history: PricePoint[];
 }
 
-export function BondingCurveChart({ candidate, history }: Props) {
+export function BondingCurveChart({ history }: Props) {
     // Use history if available, otherwise fallback (or show empty)
     // We need to map history to the format Recharts expects, which matches our PricePoint interface mostly.
     const data = history.length > 0 ? history.map((h, i) => ({

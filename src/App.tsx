@@ -72,7 +72,6 @@ function App() {
           </div>
           {/* Passing first candidate just for demo chart visuals */}
           {candidates.length > 0 && <BondingCurveChart
-            candidate={candidates[0]}
             history={history[candidates[0].id] || []}
           />}
         </div>
