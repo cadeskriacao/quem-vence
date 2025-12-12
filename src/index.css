@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vence: #00ff9d;
+  --color-vence-glow: rgba(0, 255, 157, 0.4);
+
+  --color-perde: #ff0055;
+  --color-perde-glow: rgba(255, 0, 85, 0.4);
+
+  --color-bg-main: #0a0a0a;
+  --color-bg-card: #141414;
+
+  --font-sans: 'Inter', sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-bg-main text-white font-sans antialiased;
+}
+
+.glass-panel {
+  @apply bg-bg-card/70 backdrop-blur-xl border border-white/10;
+}
+
+.text-gradient-vence {
+  background: linear-gradient(to right, #00ff9d, #00cc7e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-perde {
+  background: linear-gradient(to right, #ff0055, #cc0044);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
