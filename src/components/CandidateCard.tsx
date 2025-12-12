@@ -1,6 +1,5 @@
-
+import { ChevronDown, CheckCircle, XCircle } from 'lucide-react';
 import type { Database } from '../types/database.types';
-import { ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 
 interface Props {
     candidate: Database['public']['Tables']['candidates']['Row'];
@@ -8,48 +7,86 @@ interface Props {
 }
 
 export function CandidateCard({ candidate, onBuy }: Props) {
+    // Rigorous Math: Probability derived strictly from Price relative to the Max Price ($20)
+    // Logic: In a constant sum market (YES + NO = $20), Price = $20 * Prob.
+    // Therefore, Prob = Price / 20.
+
+    const probVence = (candidate.price_vence / 20) * 100;
+    const probPerde = (candidate.price_perde / 20) * 100;
+
+    // Odds / Multiplier = 1 / Probability
+    // e.g. 50% = 2.0x. 25% = 4.0x.
+    const multiVence = (100 / probVence).toFixed(2);
+    const multiPerde = (100 / probPerde).toFixed(2);
+
     return (
-        <div className="glass-panel p-6 rounded-2xl flex flex-col gap-4">
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 font-sans">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <img
-                    src={candidate.image_url}
-                    alt={candidate.name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
-                />
-                <div>
-                    <h3 className="text-xl font-bold text-white">{candidate.name}</h3>
-                    <span className="text-sm text-gray-400 uppercase tracking-wider">{candidate.role}</span>
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                    <img
+                        src={candidate.image_url}
+                        alt={candidate.name}
+                        className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                    />
+                    <span className="text-lg font-bold text-gray-900">{candidate.name}</span>
                 </div>
-                <div className="ml-auto flex items-center gap-2 text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">
-                    <TrendingUp className="w-3 h-3" />
-                    {candidate.supply_vence_sold.toLocaleString()} Holders
-                </div>
+                <ChevronDown className="text-gray-400 w-5 h-5" />
             </div>
 
-            {/* Prices */}
-            <div className="grid grid-cols-2 gap-4 mt-2">
+            {/* Probability Bar */}
+            <div className="flex justify-between text-sm font-bold text-gray-900 mb-1">
+                <span>{probVence.toFixed(0)}%</span>
+                <span className="text-gray-400 font-normal text-xs uppercase tracking-wide mt-0.5">Chance</span>
+                <span>{probPerde.toFixed(0)}%</span>
+            </div>
+
+            <div className="h-2 w-full flex rounded-full overflow-hidden mb-6">
+                <div className="bg-vence h-full transition-all duration-500" style={{ width: `${probVence}%` }} />
+                <div className="bg-perde h-full transition-all duration-500" style={{ width: `${probPerde}%` }} />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+                {/* Yes Button */}
                 <button
                     onClick={() => onBuy('VENCE', candidate.id)}
-                    className="cursor-pointer group relative overflow-hidden rounded-xl bg-vence/10 hover:bg-vence/20 border border-vence/20 hover:border-vence/50 transition-all p-4 text-left"
+                    className="group relative bg-vence hover:bg-vence-dark text-white rounded-xl p-3 transition-colors flex flex-col items-center justify-center gap-1 shadow-sm active:translate-y-0.5"
                 >
-                    <div className="text-xs text-vence font-medium mb-1 uppercase tracking-wider">Apoiar</div>
-                    <div className="text-2xl font-bold flex items-center gap-2 text-white">
-                        R$ {candidate.price_vence.toFixed(2)}
-                        <ArrowUpRight className="w-5 h-5 text-vence opacity-50 group-hover:opacity-100 transition-opacity" />
+                    <div className="w-full flex justify-between items-center px-2">
+                        <div className="flex items-center gap-1 font-bold">
+                            <CheckCircle size={16} /> Yes
+                        </div>
+                        <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {multiVence}x
+                        </span>
                     </div>
                 </button>
 
+                {/* No Button */}
                 <button
                     onClick={() => onBuy('PERDE', candidate.id)}
-                    className="cursor-pointer group relative overflow-hidden rounded-xl bg-perde/10 hover:bg-perde/20 border border-perde/20 hover:border-perde/50 transition-all p-4 text-left"
+                    className="group relative bg-perde hover:bg-perde-dark text-white rounded-xl p-3 transition-colors flex flex-col items-center justify-center gap-1 shadow-sm active:translate-y-0.5"
                 >
-                    <div className="text-xs text-perde font-medium mb-1 uppercase tracking-wider">Rejeitar</div>
-                    <div className="text-2xl font-bold flex items-center gap-2 text-white">
-                        R$ {candidate.price_perde.toFixed(2)}
-                        <ArrowDownRight className="w-5 h-5 text-perde opacity-50 group-hover:opacity-100 transition-opacity" />
+                    <div className="w-full flex justify-between items-center px-2">
+                        <div className="flex items-center gap-1 font-bold">
+                            <XCircle size={16} /> No
+                        </div>
+                        <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {multiPerde}x
+                        </span>
                     </div>
                 </button>
+            </div>
+
+            {/* Price Footer */}
+            <div className="flex justify-between mt-3 text-xs font-medium px-1">
+                <div className="text-gray-900">
+                    R${candidate.price_vence.toFixed(2)} <span className="text-vence">→ R${(candidate.price_vence * 1.05).toFixed(2)}</span>
+                </div>
+                <div className="text-gray-900">
+                    R${candidate.price_perde.toFixed(2)} <span className="text-vence">→ R${(candidate.price_perde * 1.05).toFixed(2)}</span>
+                </div>
             </div>
         </div>
     )

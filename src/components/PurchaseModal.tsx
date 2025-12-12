@@ -74,18 +74,18 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-0">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative w-full max-w-md bg-[#141414] border border-white/10 rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-200">
+            <div className="relative w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-200 font-sans">
 
                 {/* Header */}
-                <div className={`p-4 border-b border-white/5 flex justify-between items-center ${type === 'VENCE' ? 'bg-vence/5' : 'bg-perde/5'}`}>
-                    <h2 className="text-lg font-bold flex items-center gap-2">
+                <div className={`p-4 border-b border-gray-100 flex justify-between items-center ${type === 'VENCE' ? 'bg-green-50' : 'bg-red-50'}`}>
+                    <h2 className="text-lg font-bold flex items-center gap-2 text-gray-900">
                         <span className={type === 'VENCE' ? 'text-vence' : 'text-perde'}>
                             Comprar {type} - {candidate.name}
                         </span>
                     </h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <X size={20} />
                     </button>
                 </div>
@@ -94,23 +94,23 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
                     {step === 'QUANTITY' && (
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm text-gray-400 mb-2">Quantidade de Tokens</label>
+                                <label className="block text-sm text-gray-500 mb-2 font-medium">Quantidade de Tokens</label>
                                 <input
                                     type="number"
                                     value={quantity}
                                     onChange={(e) => setQuantity(e.target.value)}
-                                    className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-3xl font-bold text-center focus:border-vence/50 outline-none"
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-3xl font-bold text-center focus:border-gray-400 outline-none text-gray-900"
                                     min="1"
                                 />
                             </div>
 
-                            <div className="bg-white/5 rounded-xl p-4 space-y-2">
+                            <div className="bg-gray-50 rounded-xl p-4 space-y-2 border border-gray-100">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">Preço Médio</span>
-                                    <span>R$ {averagePrice.toFixed(2)}</span>
+                                    <span className="text-gray-500">Preço Médio</span>
+                                    <span className="text-gray-900 font-medium">R$ {averagePrice.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
-                                    <span>Total</span>
+                                <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
+                                    <span className="text-gray-900">Total</span>
                                     <span className={type === 'VENCE' ? 'text-vence' : 'text-perde'}>
                                         R$ {total.toFixed(2)}
                                     </span>
@@ -119,13 +119,12 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
 
                             <button
                                 onClick={() => setStep('USER_INFO')}
-                                className={`w-full py-4 rounded-xl font-bold text-black transition-transform active:scale-95 ${type === 'VENCE' ? 'bg-vence hover:bg-vence/90' : 'bg-perde hover:bg-perde/90'}`}
+                                className={`w-full py-4 rounded-xl font-bold text-white shadow-sm transition-transform active:scale-95 ${type === 'VENCE' ? 'bg-vence hover:bg-vence-dark' : 'bg-perde hover:bg-perde-dark'}`}
                             >
                                 Continuar
                             </button>
                         </div>
                     )}
-
                     {step === 'USER_INFO' && (
                         <div className="space-y-4">
                             <div>
