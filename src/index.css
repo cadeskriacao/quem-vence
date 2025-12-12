@@ -1,23 +1,29 @@
 @import "tailwindcss";
 
-:root {
+@theme {
+  /* Updated Light Theme Colors */
   --color-vence: #10b981;
+  /* Flat Green */
   --color-vence-dark: #059669;
+
   --color-perde: #ef4444;
+  /* Flat Red */
   --color-perde-dark: #dc2626;
 
   --color-bg-main: #f3f4f6;
+  /* Light Gray */
   --color-bg-card: #ffffff;
+  /* White */
 
   --font-sans: 'Inter', sans-serif;
 
   --color-text-main: #111827;
   --color-text-sec: #6b7280;
-
-  color-scheme: light;
 }
 
-
+:root {
+  color-scheme: light;
+}
 
 body {
   background-color: var(--color-bg-main);
