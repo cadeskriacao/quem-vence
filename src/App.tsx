@@ -2,14 +2,25 @@ import { useState } from 'react'
 import { CandidateCard } from './components/CandidateCard'
 import { BondingCurveChart } from './components/BondingCurveChart'
 import { PurchaseModal } from './components/PurchaseModal'
-import { Info } from 'lucide-react'
+import { Info, Wallet } from 'lucide-react'
 import { useMarketSimulation } from './hooks/useMarketSimulation'
+import { useUserPortfolio } from './hooks/useUserPortfolio'
+import { WalletModal } from './components/WalletModal'
 
 function App() {
   const { candidates, history, executeTrade } = useMarketSimulation();
+  const { portfolio, balance, addToPortfolio, sellFromPortfolio, withdrawBalance } = useUserPortfolio();
 
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [purchaseType, setPurchaseType] = useState<'VENCE' | 'PERDE' | null>(null);
+
+  // Chart selection state
+  const [chartCandidateId, setChartCandidateId] = useState<string | null>(null);
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+
+  // Default to first candidate for chart if none selected
+  const activeChartId = chartCandidateId || candidates[0]?.id;
+  const activeChartCandidate = candidates.find(c => c.id === activeChartId);
 
   const selectedCandidate = candidates.find(c => c.id === selectedCandidateId);
 
@@ -25,8 +36,17 @@ function App() {
 
   const handlePurchaseSuccess = (amount: number, _cpf: string, _whatsapp: string) => {
     if (selectedCandidateId && purchaseType) {
+      // Execute market trade
       executeTrade(selectedCandidateId, purchaseType, amount);
-      closePurchase();
+
+      // Add to user portfolio (calculate cost based on current price approx)
+      const candidate = candidates.find(c => c.id === selectedCandidateId);
+      if (candidate) {
+        const price = purchaseType === 'VENCE' ? candidate.price_vence : candidate.price_perde;
+        addToPortfolio(selectedCandidateId, purchaseType, amount, price * amount);
+      }
+
+      // Keep modal open on Success step, user closes manually
     }
   };
 
@@ -41,11 +61,25 @@ function App() {
             </h1>
             <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Presidente</span>
           </div>
-          <div className="flex flex-col items-end">
-            <div className="text-xs text-gray-400 font-medium">Vol R$10.000</div>
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              <img src="https://flagcdn.com/w20/br.png" alt="Brasil" className="w-5 h-auto rounded-sm" />
+          <div className="flex items-center gap-4">
+            {/* Wallet Button */}
+            <button
+              onClick={() => setIsWalletOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors"
+            >
+              <Wallet size={16} className="text-gray-900" />
+              <div className="flex flex-col items-start leading-none">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Saldo</span>
+                <span className="text-xs font-bold text-gray-900">R$ {balance.toFixed(2)}</span>
+              </div>
+            </button>
+
+            <div className="flex flex-col items-end">
+              <div className="text-xs text-gray-400 font-medium">Vol R$10.000</div>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <img src="https://flagcdn.com/w20/br.png" alt="Brasil" className="w-5 h-auto rounded-sm" />
+              </div>
             </div>
           </div>
         </div>
@@ -70,16 +104,42 @@ function App() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Histórico Geral</h3>
           </div>
-          {/* Passing first candidate just for demo chart visuals */}
-          {candidates.length > 0 && <BondingCurveChart
-            history={history[candidates[0].id] || []}
-          />}
+
+          {/* Chip Selector */}
+          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+            {candidates.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setChartCandidateId(c.id)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeChartId === c.id
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                  }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Chart */}
+          {activeChartCandidate && (
+            <div className="relative">
+              <div className="absolute top-2 right-2 flex gap-4 text-xs font-bold">
+                <div className="flex items-center gap-1 text-vence">
+                  <div className="w-2 h-2 bg-vence rounded-full"></div> VENCE
+                </div>
+                <div className="flex items-center gap-1 text-perde">
+                  <div className="w-2 h-2 bg-perde rounded-full"></div> PERDE
+                </div>
+              </div>
+              <BondingCurveChart
+                history={history[activeChartId] || []}
+              />
+            </div>
+          )}
         </div>
 
-        {/* WhatsApp Button */}
-        <button className="w-full py-4 bg-white border-2 border-gray-900 text-gray-900 font-black uppercase tracking-wide text-sm hover:bg-gray-50 transition-colors shadow-sm active:translate-y-0.5">
-          Compartilhar Whatsapp
-        </button>
+        {/* Whatsapp Button: Removed (moved to purchase flow) */}
 
         {/* Rules Teaser */}
         <div className="bg-white p-4 rounded-xl border border-gray-200">
@@ -106,7 +166,17 @@ function App() {
         </div>
       </div>
 
-      {selectedCandidate && purchaseType && (
+      <WalletModal
+        isOpen={isWalletOpen}
+        onClose={() => setIsWalletOpen(false)}
+        portfolio={portfolio}
+        candidates={candidates}
+        balance={balance}
+        onSell={sellFromPortfolio}
+        onWithdraw={withdrawBalance}
+      />
+
+      {selectedCandidateId && purchaseType && selectedCandidate && (
         <PurchaseModal
           isOpen={true}
           onClose={closePurchase}

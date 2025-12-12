@@ -128,40 +128,40 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
                     {step === 'USER_INFO' && (
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm text-gray-400 mb-1">CPF</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">CPF</label>
                                 <input
                                     type="text"
                                     value={cpf}
                                     onChange={(e) => setCpf(e.target.value)}
                                     placeholder="000.000.000-00"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-white/30"
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-900 font-medium outline-none focus:border-gray-400 focus:bg-white transition-colors placeholder:text-gray-400"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-gray-400 mb-1">WhatsApp</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">WhatsApp</label>
                                 <input
                                     type="text"
                                     value={whatsapp}
                                     onChange={(e) => setWhatsapp(e.target.value)}
                                     placeholder="(11) 99999-9999"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-white/30"
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-900 font-medium outline-none focus:border-gray-400 focus:bg-white transition-colors placeholder:text-gray-400"
                                 />
                             </div>
 
-                            <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                                <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-                                <div className="text-xs text-yellow-200/80">
-                                    <p className="font-bold text-yellow-500 mb-1">Aviso de Risco</p>
+                            <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-100 rounded-xl">
+                                <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+                                <div className="text-xs text-yellow-700 leading-relaxed">
+                                    <p className="font-bold text-yellow-800 mb-1">Aviso de Risco</p>
                                     Estes tokens são ativos de utilidade social e não representam investimento financeiro ou promessa de retorno.
                                 </div>
                             </div>
 
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${agreed ? 'bg-vence border-vence' : 'border-gray-600'}`}>
-                                    {agreed && <CheckCircle size={14} className="text-black" />}
+                            <label className="flex items-center gap-3 cursor-pointer group p-1">
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${agreed ? 'bg-gray-900 border-gray-900' : 'border-gray-300 bg-white group-hover:border-gray-400'}`}>
+                                    {agreed && <CheckCircle size={14} className="text-white" />}
                                 </div>
                                 <input type="checkbox" className="hidden" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-                                <span className="text-sm text-gray-400 group-hover:text-gray-300">
+                                <span className="text-sm text-gray-500 font-medium group-hover:text-gray-900 transition-colors">
                                     Declaro que li e concordo com os termos.
                                 </span>
                             </label>
@@ -179,13 +179,13 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
                     {step === 'PAYMENT' && (
                         <div className="text-center space-y-6">
                             <div className="flex flex-col items-center gap-2">
-                                <p className="text-sm text-gray-400">Total a pagar</p>
-                                <div className="text-3xl font-bold text-white">R$ {total.toFixed(2)}</div>
+                                <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Total a pagar</p>
+                                <div className="text-4xl font-black text-gray-900">R$ {total.toFixed(2)}</div>
                             </div>
 
-                            <div className="bg-white p-4 rounded-xl inline-block mx-auto">
+                            <div className="bg-white p-4 rounded-xl inline-block mx-auto border-4 border-gray-100 shadow-inner">
                                 {/* Mock QR Code */}
-                                <div className="w-48 h-48 bg-black/10 flex items-center justify-center text-xs text-black font-mono break-all">
+                                <div className="w-48 h-48 bg-gray-900 flex items-center justify-center text-xs text-gray-400 font-mono break-all p-2 text-center">
                                     [QR CODE PIX MOCK]
                                 </div>
                             </div>
@@ -193,45 +193,59 @@ export function PurchaseModal({ isOpen, onClose, candidate, type, onSuccess }: P
                             <div className="space-y-3">
                                 <button
                                     onClick={copyPix}
-                                    className="flex items-center justify-center gap-2 w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-colors"
+                                    className="flex items-center justify-center gap-2 w-full py-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 transition-colors active:scale-95"
                                 >
-                                    <Copy size={16} />
+                                    <Copy size={18} />
                                     Copiar código PIX
                                 </button>
 
                                 {!loading ? (
                                     <button
                                         onClick={handlePayment}
-                                        className={`w-full py-3 rounded-lg font-bold text-black ${type === 'VENCE' ? 'bg-vence' : 'bg-perde'}`}
+                                        className={`w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-vence/20 transition-transform active:scale-95 ${type === 'VENCE' ? 'bg-vence hover:bg-vence-dark' : 'bg-perde hover:bg-perde-dark'}`}
                                     >
                                         Simular Pagamento Confirmado
                                     </button>
                                 ) : (
-                                    <div className="flex items-center justify-center gap-2 text-gray-400 py-3">
+                                    <div className="flex items-center justify-center gap-2 text-gray-500 py-3 font-medium bg-gray-50 rounded-xl">
                                         <Loader2 className="animate-spin" />
                                         Verificando pagamento...
                                     </div>
                                 )}
                             </div>
 
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide">
                                 Expira em 04:59
                             </div>
                         </div>
                     )}
 
                     {step === 'SUCCESS' && (
-                        <div className="text-center py-8 space-y-4">
-                            <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle size={32} />
+                        <div className="text-center py-8 space-y-6">
+                            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-in zoom-in duration-300">
+                                <CheckCircle size={40} />
                             </div>
-                            <h3 className="text-2xl font-bold text-white">Pagamento Confirmado!</h3>
-                            <p className="text-gray-400">
-                                Seus <strong>{quantity} tokens {type}</strong> foram enviados para sua carteira vinculada ao WhatsApp <strong>{whatsapp}</strong>.
-                            </p>
+
+                            <div className="space-y-2">
+                                <h3 className="text-2xl font-black text-gray-900">Pagamento Confirmado!</h3>
+                                <p className="text-gray-500 max-w-xs mx-auto">
+                                    Seus <strong className="text-gray-900">{quantity} tokens {type}</strong> foram enviados para sua carteira vinculada ao WhatsApp <br /><strong className="text-gray-900">{whatsapp}</strong>.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    const text = `Acabei de apostar que ${candidate.name} vai ${type}! 🚀 Confira em: https://quemvence.app`;
+                                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                                }}
+                                className="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg shadow-green-500/20"
+                            >
+                                Compartilhar no WhatsApp
+                            </button>
+
                             <button
                                 onClick={onClose}
-                                className="mt-6 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-full font-medium transition-colors"
+                                className="px-8 py-3 text-gray-400 hover:text-gray-600 font-bold transition-colors text-sm uppercase tracking-wide"
                             >
                                 Fechar
                             </button>
