@@ -1,18 +1,20 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-import type { PricePoint } from '../hooks/useMarketSimulation';
-
-interface Props {
-    history: PricePoint[];
+interface ChartLine {
+    dataKey: string;
+    stroke: string;
+    name: string;
 }
 
-export function BondingCurveChart({ history }: Props) {
-    // Use history if available, otherwise fallback (or show empty)
-    // We need to map history to the format Recharts expects, which matches our PricePoint interface mostly.
-    const data = history.length > 0 ? history.map((h, i) => ({
-        ...h,
-        step: i
-    })) : [];
+interface Props {
+    data: any[];
+    lines: ChartLine[];
+    currencyFormatter?: (value: number) => string;
+}
+
+export function BondingCurveChart({ data, lines, currencyFormatter }: Props) {
+    const defaultFormatter = (val: number) => `R$${val.toFixed(2)}`;
+    const formatter = currencyFormatter || defaultFormatter;
 
     return (
         <div className="h-64 w-full bg-white rounded-xl p-4">
@@ -21,9 +23,9 @@ export function BondingCurveChart({ history }: Props) {
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                     <XAxis dataKey="step" hide />
                     <YAxis
-                        domain={['auto', 'auto']}
+                        domain={[0, 100]}
                         stroke="#9ca3af"
-                        tickFormatter={(val: number) => `R$${val.toFixed(0)}`}
+                        tickFormatter={(val) => formatter(val).replace('%', '') + '%'}
                         width={40}
                         tick={{ fontSize: 12 }}
                     />
@@ -31,24 +33,19 @@ export function BondingCurveChart({ history }: Props) {
                         contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         itemStyle={{ fontSize: '14px', fontWeight: 'bold' }}
                         labelStyle={{ display: 'none' }}
-                        formatter={(value: number, name: string) => [`R$ ${value.toFixed(2)}`, name.toUpperCase()]}
+                        formatter={(value: number, name: string) => [formatter(value), name.toUpperCase()]}
                     />
-                    <Line
-                        type="monotone"
-                        dataKey="vence"
-                        stroke="#10b981"
-                        strokeWidth={3}
-                        dot={false}
-                        name="VENCE"
-                    />
-                    <Line
-                        type="monotone"
-                        dataKey="perde"
-                        stroke="#ef4444"
-                        strokeWidth={3}
-                        dot={false}
-                        name="PERDE"
-                    />
+                    {lines.map((line) => (
+                        <Line
+                            key={line.dataKey}
+                            type="monotone"
+                            dataKey={line.dataKey}
+                            stroke={line.stroke}
+                            strokeWidth={3}
+                            dot={false}
+                            name={line.name}
+                        />
+                    ))}
                 </LineChart>
             </ResponsiveContainer>
         </div>

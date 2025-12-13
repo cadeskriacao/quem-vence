@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { CandidateCard } from './components/CandidateCard'
 import { BondingCurveChart } from './components/BondingCurveChart'
 import { PurchaseModal } from './components/PurchaseModal'
-import { Info } from 'lucide-react'
 import { useMarketSimulation } from './hooks/useMarketSimulation'
 import { useUserPortfolio } from './hooks/useUserPortfolio'
 import { WalletModal } from './components/WalletModal'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AuthModal } from './components/AuthModal'
+import { ComingSoonModal } from './components/ComingSoonModal'
+import { InfoTabs } from './components/InfoTabs'
+
+// Assign constant colors to candidates for consistency
+const CANDIDATE_COLORS = [
+  '#000000', // Black
+  '#2563eb', // Blue
+  '#dc2626', // Red
+  '#16a34a', // Green
+  '#d97706', // Amber
+  '#7c3aed', // Violet
+];
 
 function AppContent() {
   const { user } = useAuth();
@@ -17,16 +28,44 @@ function AppContent() {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [purchaseType, setPurchaseType] = useState<'VENCE' | 'PERDE' | null>(null);
 
-  // Chart selection state
-  const [chartCandidateId, setChartCandidateId] = useState<string | null>(null);
+  // Chart State
+  const [chartTab, setChartTab] = useState<'VENCE' | 'PERDE'>('VENCE');
 
   // Modals
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isComingSoonOpen, setComingSoonOpen] = useState(false);
 
-  // Default to first candidate for chart if none selected
-  const activeChartId = chartCandidateId || candidates[0]?.id;
-  const activeChartCandidate = candidates.find(c => c.id === activeChartId);
+  // --- Data Transformation for Comparison Chart ---
+  const chartData = useMemo(() => {
+    // Find the max length of history (should be same for all, but safer to check)
+    const maxSteps = Math.max(...Object.values(history).map(h => h.length), 0);
+    if (maxSteps === 0) return [];
+
+    const data = [];
+    for (let i = 0; i < maxSteps; i++) {
+      const point: any = { step: i };
+      candidates.forEach(c => {
+        const hist = history[c.id];
+        if (hist && hist[i]) {
+          const price = chartTab === 'VENCE' ? hist[i].vence : hist[i].perde;
+          // Convert Price to Percentage: (Price / 20) * 100
+          point[c.id] = (price / 20) * 100;
+        }
+      });
+      data.push(point);
+    }
+    return data;
+  }, [history, candidates, chartTab]);
+
+  const chartLines = useMemo(() => {
+    return candidates.map((c, index) => ({
+      dataKey: c.id,
+      name: c.name,
+      stroke: CANDIDATE_COLORS[index % CANDIDATE_COLORS.length]
+    }));
+  }, [candidates]);
+  // -----------------------------------------------
 
   const selectedCandidate = candidates.find(c => c.id === selectedCandidateId);
 
@@ -89,82 +128,71 @@ function AppContent() {
 
         {/* Candidates List - Cards */}
         <div className="space-y-4">
-          {candidates.map(candidate => (
-            <div key={candidate.id}>
-              <CandidateCard
-                candidate={candidate}
-                onBuy={openPurchase}
-              />
-            </div>
-          ))}
+          {[...candidates]
+            .sort((a, b) => b.price_vence - a.price_vence)
+            .map(candidate => (
+              <div key={candidate.id}>
+                <CandidateCard
+                  candidate={candidate}
+                  onBuy={openPurchase}
+                />
+              </div>
+            ))}
         </div>
 
         {/* Chart Section - Global Context */}
         <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Histórico Geral</h3>
-          </div>
-
-          {/* Chip Selector */}
-          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-            {candidates.map(c => (
+            {/* VENCE / PERDE Tabs */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
               <button
-                key={c.id}
-                onClick={() => setChartCandidateId(c.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeChartId === c.id
-                  ? 'bg-gray-900 text-white border-gray-900'
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
-                  }`}
+                onClick={() => setChartTab('VENCE')}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${chartTab === 'VENCE' ? 'bg-white text-vence shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
               >
-                {c.name}
+                VENCE
               </button>
-            ))}
+              <button
+                onClick={() => setChartTab('PERDE')}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${chartTab === 'PERDE' ? 'bg-white text-perde shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                PERDE
+              </button>
+            </div>
           </div>
 
           {/* Chart */}
-          {activeChartCandidate && (
-            <div className="relative">
-              <div className="absolute top-2 right-2 flex gap-4 text-xs font-bold">
-                <div className="flex items-center gap-1 text-vence">
-                  <div className="w-2 h-2 bg-vence rounded-full"></div> VENCE
-                </div>
-                <div className="flex items-center gap-1 text-perde">
-                  <div className="w-2 h-2 bg-perde rounded-full"></div> PERDE
-                </div>
-              </div>
-              <BondingCurveChart
-                history={history[activeChartId] || []}
-              />
-            </div>
-          )}
+          <div className="relative">
+            <BondingCurveChart
+              data={chartData}
+              lines={chartLines}
+              currencyFormatter={(val) => `${val.toFixed(1)}%`}
+            />
+          </div>
         </div>
 
         {/* Whatsapp Button: Removed (moved to purchase flow) */}
 
-        {/* Rules Teaser */}
-        <div className="bg-white p-4 rounded-xl border border-gray-200">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold uppercase text-gray-900">Regras</h3>
-            <span className="text-xs text-gray-400 flex items-center gap-1">
-              <Info size={12} /> Oct 4, 2026
-            </span>
-          </div>
-          <p className="text-sm text-gray-600">
-            O mercado fecha no dia da eleição. Ganhos são distribuídos proporcionalmente aos tokens VENCE do vencedor.
-          </p>
-        </div>
+        {/* Info Section (Rules, Disclaimer, Terms) */}
+        <InfoTabs />
 
       </main>
 
       {/* Bottom Nav Mock */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 z-40">
         <div className="max-w-md mx-auto flex justify-around text-xs font-bold text-gray-400 uppercase tracking-tighter">
-          <span className="text-black border-b-2 border-black pb-1">Presidente</span>
-          <span>Governador</span>
-          <span>Senador</span>
-          <span>Deputado</span>
+          <span className="text-black border-b-2 border-black pb-1 cursor-pointer">Presidente</span>
+          <span onClick={() => setComingSoonOpen(true)} className="cursor-pointer hover:text-gray-600 transition-colors">Governador</span>
+          <span onClick={() => setComingSoonOpen(true)} className="cursor-pointer hover:text-gray-600 transition-colors">Senador</span>
+          <span onClick={() => setComingSoonOpen(true)} className="cursor-pointer hover:text-gray-600 transition-colors">Deputado</span>
         </div>
       </div>
+
+      <ComingSoonModal
+        isOpen={isComingSoonOpen}
+        onClose={() => setComingSoonOpen(false)}
+        title="Em breve"
+      />
 
       <WalletModal
         isOpen={isWalletOpen}
